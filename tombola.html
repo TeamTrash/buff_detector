@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tómbola Visual con Clases</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        h2 { margin-top: 30px; }
+        .container { margin-bottom: 40px; }
+        table { margin: 0 auto; border-collapse: collapse; }
+        th, td { border: 1px solid #999; padding: 8px 12px; }
+        th { background-color: #f0f0f0; }
+        .tabla-wrapper { max-width: 600px; margin: 0 auto; }
+        .add-row { margin-top: 10px; }
+        .add-row input, .add-row select { padding: 5px; width: 150px; margin-right: 10px; }
+        .add-row button { padding: 5px 10px; }
+        .remove-btn { cursor: pointer; color: red; font-weight: bold; }
+
+        /* NUEVOS ESTILOS PARA EQUIPOS EN COLUMNA */
+        .resultado {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .equipo-box {
+            flex: 1 1 250px;
+            max-width: 250px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background: #fafafa;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .equipo-box h3 {
+            margin-top: 0;
+        }
+
+        .sobrantes {
+            width: 100%;
+            text-align: left;
+            margin-top: 20px;
+            color: #444;
+            font-size: 14px;
+        }
+
+        #icono-svg {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🎰 Tómbola con Clases 🎰</h1>
+
+<div class="container">
+    <h2>🔥 DPS</h2>
+    <div class="tabla-wrapper">
+        <table id="dps-table">
+            <thead>
+            <tr><th>#</th><th>Nickname</th><th>Clase</th><th>Acción</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div class="add-row">
+            <input type="text" id="dps-nick" placeholder="Nickname DPS">
+            <select id="dps-class">
+                <option value="">Clase</option>
+                <option>Berserker</option>
+                <option>Gunlancer</option>
+                <option>Destroyer</option>
+                <option>Slayer</option>
+                <option>Striker</option>
+                <option>War Dancer</option>
+                <option>Matona</option>
+                <option>Puño Espiritual</option>
+                <option>Gujista</option>
+                <option>Breaker</option>
+                <option>Pistolero</option>
+                <option>Artificiero </option>
+                <option>CazaDemonios</option>
+                <option>Francotirador</option>
+                <option>Maquinista</option>
+                <option>Hechicero</option>
+                <option>Arcanista</option>
+                <option>Invocadora</option>
+                <option>Caza Sombras</option>
+                <option>Espada Letal</option>
+                <option>Reaper</option>
+                <option>Soul Eater</option>
+                <option>AeroMancer</option>
+                <option>WildSoul</option>
+            </select>
+            <span id="icono-svg"></span>
+            <button onclick="agregarJugador('DPS')">Agregar</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <h2>🛡️ SUPP</h2>
+    <div class="tabla-wrapper">
+        <table id="supp-table">
+            <thead>
+            <tr><th>#</th><th>Nickname</th><th>Clase</th><th>Acción</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div class="add-row">
+            <input type="text" id="supp-nick" placeholder="Nickname SUPP">
+            <select id="supp-class">
+                <option value="">Clase</option>
+                <option>Bardo</option>
+                <option>Paladín</option>
+                <option>Artista</option>
+            </select>
+            <button onclick="agregarJugador('SUPP')">Agregar</button>
+        </div>
+    </div>
+</div>
+
+<button onclick="sortear()">🎉 Sortear Equipos</button>
+
+<div class="resultado" id="resultado"></div>
+
+<script>
+    const jugadores = {
+        DPS: [],
+        SUPP: []
+    };
+
+    function agregarJugador(tipo) {
+        const nickInput = document.getElementById(`${tipo.toLowerCase()}-nick`);
+        const classInput = document.getElementById(`${tipo.toLowerCase()}-class`);
+        const nick = nickInput.value.trim();
+        const clase = classInput.value.trim();
+
+        if (!nick || !clase) {
+            alert('Debes ingresar nickname y clase.');
+            return;
+        }
+
+        jugadores[tipo].push({ nick, clase });
+        nickInput.value = '';
+        classInput.selectedIndex = 0;
+        if (tipo === "DPS") mostrarIcono(); // limpiar ícono al resetear
+        actualizarTabla(tipo);
+    }
+
+    function eliminarJugador(tipo, index) {
+        jugadores[tipo].splice(index, 1);
+        actualizarTabla(tipo);
+    }
+
+    function actualizarTabla(tipo) {
+        const tbody = document.querySelector(`#${tipo.toLowerCase()}-table tbody`);
+        tbody.innerHTML = '';
+
+        jugadores[tipo].forEach((j, index) => {
+            const fila = `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${j.nick}</td>
+            <td>${j.clase}</td>
+            <td><span class="remove-btn" onclick="eliminarJugador('${tipo}', ${index})">❌</span></td>
+          </tr>
+        `;
+            tbody.innerHTML += fila;
+        });
+    }
+
+    function sortear() {
+        let dps = mezclar([...jugadores.DPS]);
+        let supp = mezclar([...jugadores.SUPP]);
+
+        const totalEquipos = Math.min(Math.floor(dps.length / 6), Math.floor(supp.length / 2));
+        if (totalEquipos === 0) {
+            alert('Se necesitan al menos 6 DPS y 2 SUPP para un equipo.');
+            return;
+        }
+
+        let resultadoHTML = '';
+
+        for (let i = 0; i < totalEquipos; i++) {
+            const equipoDPS = dps.splice(0, 6);
+            const equipoSUPP = supp.splice(0, 2);
+
+            const equipo = [
+                ...equipoDPS.map(j => ({ rol: 'DPS', nick: j.nick, clase: j.clase })),
+                ...equipoSUPP.map(j => ({ rol: 'SUPP', nick: j.nick, clase: j.clase }))
+            ];
+
+            resultadoHTML += generarTablaHTML(equipo, i + 1);
+        }
+
+        let sobrantes = '';
+        if (dps.length || supp.length) {
+            sobrantes += `<div class="sobrantes"><strong>Jugadores sin equipo:</strong><br>`;
+            if (dps.length) sobrantes += `DPS: ${dps.map(j => j.nick).join(', ')}<br>`;
+            if (supp.length) sobrantes += `SUPP: ${supp.map(j => j.nick).join(', ')}`;
+            sobrantes += `</div>`;
+        }
+
+        document.getElementById('resultado').innerHTML = resultadoHTML + sobrantes;
+    }
+
+    function mezclar(arr) {
+        return arr
+            .map(value => ({ value, sort: Math.random() }))
+            .sort((a, b) => a.sort - b.sort)
+            .map(({ value }) => value);
+    }
+
+    function generarTablaHTML(equipo, numero) {
+        let html = `
+        <div class="equipo-box">
+            <h3>Equipo ${numero}</h3>
+            <table>
+              <thead>
+                <tr><th>Rol</th><th>Jugador</th><th>Clase</th></tr>
+              </thead>
+              <tbody>
+        `;
+
+        for (let i = 0; i < equipo.length; i++) {
+            html += `
+              <tr>
+                <td>${equipo[i].rol}</td>
+                <td>${equipo[i].nick}</td>
+                <td>${equipo[i].clase}</td>
+              </tr>
+            `;
+        }
+
+        html += `</tbody></table></div>`;
+        return html;
+    }
+
+    function mostrarIcono() {
+        const clase = document.getElementById('dps-class').value;
+        const icono = document.getElementById('icono-svg');
+
+        if (clase === "Berserker") {
+            icono.innerHTML = `
+            <svg viewBox="0 0 752.4 615.6" fill="currentColor" width="20" height="20">
+                <path d="M282 384.9c..."></path> <!-- Pega tu path SVG aquí -->
+            </svg>
+            `;
+        } else {
+            icono.innerHTML = "";
+        }
+    }
+</script>
+
+</body>
+</html>
